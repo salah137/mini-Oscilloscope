@@ -3,12 +3,13 @@
 #include "driver/adc_types_legacy.h"
 #include "esp_adc/adc_continuous.h"
 #include "esp_err.h"
+#include "esp_log.h"
 #include "hal/adc_types.h"
 #include <stdbool.h>
 
 #define READ_LEN 2048
 
-#define SAMPLE_FRQ 100 * 1000
+#define SAMPLE_FRQ 500 * 1000
 #define READ_PERIOD 1 / SAMPLE_FRQ
 
 #define CHANNEL_1 ADC1_CHANNEL_6
@@ -96,24 +97,31 @@ static float calculate_frequency_zero_crossing(sample_t *s) {
 }
 
 void get_sample(sample_t *s) {
-  read_adc_continuous(s->values, s->channel);
-  uint16_t max = s->values[0];
+    // 1. Clear the values first to prevent "ghost" data
+    memset(s->values, 0, sizeof(s->values));
 
-  for (int i = 0; i < READ_LEN; i++) {
-    if (max < s->values[i]) {
-      max = s->values[i];
+    // 2. Perform the read
+    read_adc_continuous(s->values, s->channel);
+
+    // 3. Use standard 'int' for the search to avoid unsigned weirdness
+    int current_max = 0; 
+    int current_min = 4095;
+
+    for (int i = 0; i < READ_LEN; i++) {
+        // Sanity check: ensure the ADC value is within 12-bit range
+        if (s->values[i] > 4095) continue; 
+
+        if (s->values[i] > current_max) current_max = s->values[i];
+        if (s->values[i] < current_min) current_min = s->values[i];
     }
-  }
 
-  uint16_t min = s->values[0];
-  for (int i = 0; i < READ_LEN; i++) {
-    if (s->values[i] < min) {
-      min = s->values[0];
-    }
-  }
-  s->max_value = (max * 3.3f) / 4095;
-  s->min = (min * 3.3f) / 4095;
-  s->avg = (s->max_value - s->min) / 2;
+    // 4. Calculate using explicit float casting
+    s->max_value = ((float)current_max * 3.3f) / 4095.0f;
+    s->min = ((float)current_min * 3.3f) / 4095.0f;
+    s->avg = (s->max_value + s->min) / 2.0f;
 
-  s->frequency = calculate_frequency_zero_crossing(s);
+    // 5. Correct Logging (Use %d for ints, %f for floats)
+    ESP_LOGI("ADC_DEBUG", "Raw Max: %d, Volts Max: %.2fV", current_max, s->max_value);
+
+    s->frequency = calculate_frequency_zero_crossing(s);
 }

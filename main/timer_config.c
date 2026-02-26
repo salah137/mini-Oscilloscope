@@ -4,7 +4,7 @@
 #include "freertos/task.h"
 
 #define TIMER_FRQ     1000000 // 1 MHz resolution (1 tick = 1 microsecond)
-#define ALARM_TICKS   10000   // Alarm every 1000 ticks (1ms interval)
+#define ALARM_TICKS   10  // Alarm every 1000 ticks (1ms interval)
 
 static TaskHandle_t my_task_handle;
 static gptimer_handle_t gptimer = NULL;

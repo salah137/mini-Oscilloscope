@@ -6,7 +6,6 @@ idf_component_register(
         "draw_ui.c"
     INCLUDE_DIRS "."
     PRIV_REQUIRES i2c_oled
-                    wifi_sta
     REQUIRES esp_driver_gptimer
              esp_driver_gpio
              esp_adc

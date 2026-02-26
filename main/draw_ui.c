@@ -18,10 +18,12 @@ void draw_grid() {
 
 void draw_graph(uint16_t *data, float max, float min) {
   float range = max - min;
-  int scale = range/45;
+  float scale = range;
   
+  ESP_LOGI("rang","%d",scale);
+
   for (int i = 0; i < READ_LEN; i++) {
-    float percentage = ((float)data[i] / 4095.0f) * scale;
+    float percentage = ((float)data[i] / 4095.0f) ;
     int y_pos = (45 - (int)(percentage * 45.0f)) + 17;
 
     ssd1306_draw_horizental_line(i, y_pos, 2, 2, 1);
@@ -35,8 +37,7 @@ void write_data(float max, float frq) {
   snprintf(frq_str, sizeof(frq_str), "%.2f HZ", frq);
   snprintf(max_str, sizeof(max_str), "%.2f V", max);
 
-  ESP_LOGI("max =>", "%f", max);
-
+  
   draw_string(2, 1, frq_str, 1, 1);
   draw_string(80, 1, max_str, 1, 1);
 }
