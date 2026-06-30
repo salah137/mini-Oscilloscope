@@ -17,7 +17,3 @@ idf.py set-target esp32
 idf.py build flash monitor
 ```
 
-## Known issues
-- `sample2` unused
-- `READ_PERIOD` (`1/SAMPLE_FRQ`) always 0
-- Timer comment says 1ms, actual alarm is 10us (`ALARM_TICKS=10` @ 1MHz)
